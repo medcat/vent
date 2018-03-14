@@ -2,6 +2,8 @@
 name = "vent"
 version = "0.1.0"
 authors = ["Jeremy Rodi <me@medcat.me>"]
+license = "MIT"
+description = "create, manage, and maintain virtual machines"
 
 [dependencies]
 serde = "1.0"
