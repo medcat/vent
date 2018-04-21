@@ -1,7 +1,9 @@
 use std::os::unix::io::{RawFd, IntoRawFd};
 use std::fs::OpenOptions;
 use nix;
-use super::{sys, Machine, Error, ErrorKind, Result, ResultExt, CheckCapability, Capability};
+use kvm_sys as sys;
+use super::{Machine, CheckCapability, Capability};
+use error::*;
 
 #[derive(Debug)]
 pub struct System(pub(super) RawFd);
@@ -19,7 +21,7 @@ impl System {
     }
 
     pub fn create_machine(&mut self) -> Result<Machine> {
-        unsafe { sys::kvm_create_vm(self.0, 0).map(|v| Machine(v)) }
+        unsafe { sys::kvm_create_vm(self.0, 0).map(|v| Machine::new(v)) }
             .chain_err(|| ErrorKind::KvmSystemOperationError)
     }
 
@@ -33,7 +35,7 @@ impl System {
             let _ = sys::kvm_get_msr_index_list(self.0, blist);
             let len = (*blist).nmsrs as usize;
             let list = libc::malloc(size_of::<sys::MsrList>() + len * size_of::<u32>()) as *mut sys::MsrList;
-            if list.is_null() { bail!(ErrorKind::KvmSystemOperationError) }
+            if list.is_null() { bail!(ErrorKind::KvmSystemOperationError); }
             let result = sys::kvm_get_msr_index_list(self.0, list);
 
             match result {

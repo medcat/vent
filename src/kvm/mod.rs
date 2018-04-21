@@ -1,11 +1,9 @@
-pub mod sys;
-mod system;
-mod machine;
-mod core;
-mod capabilities;
+pub mod system;
+pub mod machine;
+pub mod core;
+pub mod capabilities;
 
 pub use self::system::System;
-pub use self::machine::Machine;
+pub use self::machine::{Machine, UserspaceMemoryRegion};
 pub use self::core::Core;
 pub use self::capabilities::{CheckCapability, Capability};
-use super::error::*;

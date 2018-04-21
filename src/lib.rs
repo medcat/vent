@@ -1,9 +1,12 @@
 extern crate serde;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate error_chain;
-#[macro_use] extern crate nix;
+extern crate nix;
+extern crate kvm_sys;
+extern crate byteorder;
 
 pub mod error;
 pub mod kvm;
+pub mod instance;
 
-pub use self::error::*;
+pub use self::error::Error;
