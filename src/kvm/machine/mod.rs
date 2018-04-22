@@ -1,56 +1,22 @@
-use std::os::unix::io::{RawFd, AsRawFd};
-use std::fs::File;
+use std::os::unix::io::RawFd;
 use std::result::Result as StdResult;
 use nix;
 use kvm_sys as sys;
 use super::{Core, CheckCapability, Capability};
 use error::*;
 
-pub use kvm_sys::UserspaceMemoryRegion as SysUserspaceMemoryRegion;
+mod ioeventfd;
+mod memory;
+pub use self::ioeventfd::*;
+pub use self::memory::*;
 
 #[derive(Debug)]
 pub struct Machine(RawFd, Vec<UserspaceMemoryRegion>);
 
-#[derive(Debug, Clone)]
-pub struct UserspaceMemoryRegion(SysUserspaceMemoryRegion);
-
-impl UserspaceMemoryRegion {
-    pub fn file(file: &File, slot: u32, addr: u64) -> Result<UserspaceMemoryRegion> {
-        use nix::sys::mman;
-        let meta = file.metadata().chain_err(|| ErrorKind::MemoryMapError)?;
-        let len = meta.len();
-
-        let data = unsafe {
-            let protflag = mman::ProtFlags::PROT_READ | mman::ProtFlags::PROT_WRITE;
-            let mapflag = mman::MapFlags::MAP_FILE | mman::MapFlags::MAP_SHARED;
-            mman::mmap(0 as *mut nix::libc::c_void, len as usize, protflag, mapflag, file.as_raw_fd(), 0)
-                .chain_err(|| ErrorKind::MemoryMapError)?
-        };
-
-        Ok(UserspaceMemoryRegion(SysUserspaceMemoryRegion {
-            slot, flags: 0,
-            guest_phys_addr: addr as u64,
-            /// in bytes.
-            memory_size: len,
-            /// the start of th userspace allocated memory.
-            userspace_addr: data as u64
-        }))
-    }
-}
-
-impl Drop for UserspaceMemoryRegion {
-    fn drop(&mut self) {
-        use nix::sys::mman;
-        unsafe {
-            mman::munmap(self.0.userspace_addr as *mut nix::libc::c_void, self.0.memory_size as usize).unwrap();
-        }
-    }
-}
-
 fn chain_then(res: StdResult<i32, nix::Error>) -> Result<()> {
     res
         .chain_err(|| ErrorKind::KvmMachineOperationError)
-        .and_then(|v| if v == 0 { Ok(())} else { Err(ErrorKind::KvmMachineOperationError.into())} )
+        .and_then(|v| if v == 0 { Ok(()) } else { Err(ErrorKind::KvmMachineOperationError.into()) } )
 }
 
 impl Machine {
@@ -103,6 +69,11 @@ impl Machine {
             chain_then(sys::kvm_set_user_memory_region(self.0, &region.0 as *const SysUserspaceMemoryRegion))
                 .map(|_| ())
         }
+    }
+
+    pub fn io<'a>(&'a mut self, address: IoAddress, length: u32) -> Result<IoEventFd<'a>> {
+        self.assert_capability(Capability::IoEventFd)?;
+        IoEventFd::new(&*self, address, length).chain_err(|| ErrorKind::KvmCoreOperationError)
     }
 }
 

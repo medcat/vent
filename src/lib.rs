@@ -4,9 +4,15 @@ extern crate serde;
 extern crate nix;
 extern crate kvm_sys;
 extern crate byteorder;
+extern crate mio;
+extern crate tokio;
+extern crate futures;
 
 pub mod error;
 pub mod kvm;
 pub mod instance;
+pub mod eventfd;
+
+mod pci;
 
 pub use self::error::Error;

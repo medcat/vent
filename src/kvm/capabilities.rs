@@ -9,8 +9,13 @@ pub trait CheckCapability {
     }
 
     fn assert_capability(&mut self, cap: Capability) -> Result<()> {
-        self.check_capability(cap)
-            .and_then(|v| if v < 0 { Err(ErrorKind::KvmMissingCapabilityError(cap).into()) } else { Ok(()) })
+        self.check_capability(cap).and_then(|v| {
+            if v < 0 { 
+                Err(ErrorKind::KvmMissingCapabilityError(cap).into()) 
+            } else { 
+                Ok(()) 
+            }
+        })
     }
 }
 
@@ -22,6 +27,7 @@ pub enum Capability {
     AdjustClock,
     MpState,
     UserspaceMemory,
+    IoEventFd
 }
 
 use std::fmt;
@@ -35,7 +41,8 @@ impl fmt::Display for Capability {
             Capability::IrqChip => write!(fmt, "KVM_CAP_IRQCHIP"),
             Capability::AdjustClock => write!(fmt, "KVM_CAP_ADJUST_CLOCK"),
             Capability::MpState => write!(fmt, "KVM_CAP_MP_STATE"),
-            Capability::UserspaceMemory => write!(fmt, "KVM_CAP_USER_MEMORY")
+            Capability::UserspaceMemory => write!(fmt, "KVM_CAP_USER_MEMORY"),
+            Capability::IoEventFd => write!(fmt, "KVM_CAP_IOEVENTFD")
         }
     }
 }
@@ -48,7 +55,8 @@ impl Into<i32> for Capability {
             Capability::IrqChip => sys::KVM_CAP_IRQCHIP,
             Capability::AdjustClock => sys::KVM_CAP_ADJUST_CLOCK,
             Capability::MpState => sys::KVM_CAP_MP_STATE,
-            Capability::UserspaceMemory => sys::KVM_CAP_USER_MEMORY
+            Capability::UserspaceMemory => sys::KVM_CAP_USER_MEMORY,
+            Capability::IoEventFd => sys::KVM_CAP_IOEVENTFD
         }
     }
 }

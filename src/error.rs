@@ -8,6 +8,14 @@ error_chain! {
         MemoryMapError
         NotifyReadError
         NotifyWriteError
+        EventFdCreateError
+        EventFdReadError
+        ActionNotError
+
+        DeviceInvalidPortError(port: u16) {
+            description("a device was given an invalid port IO request")
+            display("a device was given an invalid port IO request on port {}", port)
+        }
 
         KvmMissingCapabilityError(cap: kvm::capabilities::Capability) {
             description("a required capability was missing from the system")
