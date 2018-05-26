@@ -11,8 +11,12 @@ serde_derive = "1.0"
 nix = "0.10"
 error-chain = "0.11.0"
 uuid = { version = "0.6", features = ["serde", "v4", "v5"] }
-kvm-sys = { path = "../kvm-sys", version = "0.1.0" }
+kvm = { path = "../kvm", version = "0.1.0" }
 tokio = "0.1"
 futures = "0.1"
 mio = "0.6"
 byteorder = "1"
+bitflags = "1"
+log = "0.4"
+env_logger = "0.5"
+libc = "0.2"

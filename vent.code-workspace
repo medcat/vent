@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../kvm"
+		},
+		{
+			"path": "/Users/medcat/Private/paxs/kvm-sys"
+		},
+		{
+			"path": "/Users/medcat/Private/paxs/seabios"
+		}
+	],
+	"settings": {}
+}
