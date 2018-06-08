@@ -1,5 +1,9 @@
-use super::Machine;
+// use super::Machine;
+// use error::*;
 
-pub(super) fn build_rsdp(machine: &mut Machine) -> Result<()> {
-    unreachable!();
-}
+// mod rsdp;
+// use self::rsdp::Rsdp;
+
+// pub(super) fn prepare(machine: &mut Machine) -> Result<()> {
+//     unreachable!();
+// }

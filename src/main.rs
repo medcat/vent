@@ -17,11 +17,12 @@ extern crate libc;
 
 use kvm::capability::{Capability, CapabilityKind};
 use std::error::Error;
-use std::sync::Arc;
 
 mod configuration;
+mod device;
 mod error;
 mod machine;
+mod virtio;
 
 fn main() {
     match run() {
@@ -47,9 +48,9 @@ fn run() -> Result<(), error::Error> {
         name: "".to_owned(),
         uuid: None,
         cores: 1,
-        memory: 0x1000000,
+        memory: 1 << 31,
     };
-    machine.push(Arc::new(machine::E9::new(None)))?;
+
     machine.prepare(&config)?;
     machine.run();
     Ok(())

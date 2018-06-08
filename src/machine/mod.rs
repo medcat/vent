@@ -1,17 +1,14 @@
 use super::configuration::MachineConfiguration;
+use super::device;
 use super::error::*;
 use kvm;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::sync::Arc;
 
+mod acpi;
 mod bios;
 mod core;
-mod device;
-mod e9;
-// mod gdt;
-
-pub use self::e9::E9;
 
 pub struct Machine {
     pub mach: kvm::Machine,
@@ -19,10 +16,9 @@ pub struct Machine {
     devices: Vec<Arc<device::Device>>,
 }
 
-// const MEMORY_32BIT_MAX: u64 = u32::max_value() as u64;
-// const MEMORY_GAP_SIZE: u64 = 786 << 20;
-const MEMORY_GAP_START: u64 = 0xc0000000;
-const MEMORY_GAP_END: u64 = 0xffffffff;
+// const MEMORY_GAP_START: u64 = 0xc0000000;
+const MEMORY_GAP_START: u64 = 0xff000000;
+const MEMORY_GAP_END: u64 = 0xffffffff + 1;
 const MEMORY_RAM_START: u64 = 0x00100000;
 
 impl Machine {
@@ -41,21 +37,18 @@ impl Machine {
 
     pub fn prepare(&mut self, config: &MachineConfiguration) -> Result<()> {
         info!("preparing machine...");
-        self.mach.create_irqchip()?;
-        self.mach.set_tss_addr(None)?;
-        self.mach.set_identity_map_addr(None)?;
+        device::prepare(self)?;
+        self.create_irqchip()?;
+        self.create_pit()?;
+        self.set_tss_addr(None)?;
+        self.set_identity_map_addr(None)?;
         let adjusted = config.memory + MEMORY_RAM_START;
 
         if adjusted > MEMORY_GAP_START {
-            let slab = self.mach.create_memory_slab(MEMORY_GAP_START as usize)?;
-            self.mach.mount_memory_region(0, slab)?;
-            let slab = self
-                .mach
-                .create_memory_slab((adjusted - MEMORY_GAP_START) as usize)?;
-            self.mach.mount_memory_region(MEMORY_GAP_END, slab)?;
+            self.create_memory_region(0, MEMORY_GAP_START as usize)?;
+            self.create_memory_region(MEMORY_GAP_END, (adjusted - MEMORY_GAP_START) as usize)?;
         } else {
-            let slab = self.mach.create_memory_slab(adjusted as usize)?;
-            self.mach.mount_memory_region(0, slab)?;
+            self.create_memory_region(0, adjusted as usize)?;
         }
 
         let mut cores = vec![];

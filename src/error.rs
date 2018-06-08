@@ -8,5 +8,7 @@ error_chain!{
             description("could not load instance firmware")
             display("could not load instance firmware: {}", reason)
         }
+
+        UnknownError
     }
 }
